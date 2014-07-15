@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="5dp" >
+
+    <ImageView
+        android:id="@+id/imgMenu"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/download" />
+
+    <TextView
+        android:id="@+id/tvMenu"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginLeft="2dp"
+        android:gravity="center_vertical"
+        android:padding="5dp"
+        android:text="TextView"
+        android:textSize="20dp"
+        android:textStyle="bold" />
+
+</LinearLayout>

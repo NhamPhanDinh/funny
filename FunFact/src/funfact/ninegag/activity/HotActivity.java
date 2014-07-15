@@ -37,11 +37,11 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 import fr.castorflex.android.smoothprogressbar.SmoothProgressBar;
+import funfact.ninegag.adapter.AdapterViewPager;
 import funfact.ninegag.model.GetData;
 import funfact.ninegag.model.Utils;
 import funfact.ninegag.model.Variable;
 import funfact.ninegag.obj.ImageItem;
-import funfact.ningag.adapter.AdapterViewPager;
 
 public class HotActivity extends SherlockFragment {
 	SatelliteMenu menu;// menu
@@ -70,12 +70,17 @@ public class HotActivity extends SherlockFragment {
 
 		// Utils.showToast(getActivity(), "OncreateVIew");
 		// TODO Auto-generated method stub
-		display=getActivity().getWindowManager().getDefaultDisplay();
+		display = getActivity().getWindowManager().getDefaultDisplay();
 		View v = inflater.inflate(R.layout.hot_activity, container, false);
+
 		progress = (SmoothProgressBar) v.findViewById(R.id.progress);
 		loader = ImageLoader.getInstance();
 		loader.init(ImageLoaderConfiguration.createDefault(getActivity()));
 		pager = (ViewPager) v.findViewById(R.id.view_pager);
+
+		createSateMenu(v);
+		data = new GetData();
+
 		pager.setOnPageChangeListener(new OnPageChangeListener() {
 
 			@Override
@@ -105,17 +110,17 @@ public class HotActivity extends SherlockFragment {
 
 			}
 		});
-		createSateMenu(v);
 
-		data = new GetData();
-
+		
+		//kiểm tra vị trí của viewpager nếu bàng -1 thì load lại nếu không thì load vị trí lưu trước đó
 		if (position != -1) {
 
 			listItem = saveList;
-			adapter = new AdapterViewPager(listItem, getActivity(),display);
+			adapter = new AdapterViewPager(listItem, getActivity(), display);
 			pager.setAdapter(adapter);
 			pager.setCurrentItem(position);
 			progress.setVisibility(View.GONE);
+			
 
 		} else {
 
@@ -133,7 +138,7 @@ public class HotActivity extends SherlockFragment {
 
 	private void reload() {
 		listItem = new ArrayList<ImageItem>();
-		adapter = new AdapterViewPager(listItem, getActivity(),display);
+		adapter = new AdapterViewPager(listItem, getActivity(), display);
 		pager.setAdapter(adapter);
 		loadData(Variable.LINK_HOT);
 	}
@@ -159,7 +164,7 @@ public class HotActivity extends SherlockFragment {
 		menu.setTotalSpacingDegree(100);
 
 		List<SatelliteMenuItem> items = new ArrayList<SatelliteMenuItem>();
-		items.add(new SatelliteMenuItem(3, R.drawable.reload));
+		items.add(new SatelliteMenuItem(3, R.drawable.share));
 		items.add(new SatelliteMenuItem(2, R.drawable.download));
 		items.add(new SatelliteMenuItem(1, R.drawable.setwallpaper));
 
@@ -173,7 +178,8 @@ public class HotActivity extends SherlockFragment {
 				} else if (id == 2) {
 					downLoadImage();
 				} else if (id == 3) {
-					reload();
+				
+					//code share here
 				}
 
 			}

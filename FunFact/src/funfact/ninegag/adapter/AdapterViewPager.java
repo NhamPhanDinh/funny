@@ -1,20 +1,31 @@
-package funfact.ningag.adapter;
+package funfact.ninegag.adapter;
 
+import it.sephiroth.android.library.imagezoom.ImageViewTouch;
+
+import java.io.File;
 import java.util.List;
 
+import uk.co.senab.photoview.PhotoView;
 import ydc.funny.funfact.R;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.support.v4.view.PagerAdapter;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.koushikdutta.ion.Ion;
+import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiscCache;
+import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
+import com.nostra13.universalimageloader.cache.memory.impl.UsingFreqLimitedMemoryCache;
 /*import com.koushikdutta.ion.Ion;*/
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -23,6 +34,7 @@ import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
+import com.nostra13.universalimageloader.utils.StorageUtils;
 
 import funfact.ninegag.obj.ImageItem;
 
@@ -43,7 +55,24 @@ public class AdapterViewPager extends PagerAdapter {
 				.getSystemService(this.mContext.LAYOUT_INFLATER_SERVICE);
 		this.display = display;
 		loader = ImageLoader.getInstance();
-		loader.init(ImageLoaderConfiguration.createDefault(mContext));
+
+		File cacheDir = StorageUtils.getOwnCacheDirectory(mContext,
+				"alrawda/Cache");
+
+		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(
+				mContext)
+				.threadPoolSize(3)
+				.threadPriority(Thread.NORM_PRIORITY - 2)
+				.memoryCache(new UsingFreqLimitedMemoryCache(2000000))
+				.memoryCacheSize(1500000)
+				// 1.5 Mb
+
+				.denyCacheImageMultipleSizesInMemory()
+				.discCache(new UnlimitedDiscCache(cacheDir))
+				.discCacheFileNameGenerator(new Md5FileNameGenerator()).build();
+		loader.init(config);
+
+		// loader.init(ImageLoaderConfiguration.createDefault(mContext));
 
 		option = new DisplayImageOptions.Builder()
 				.showImageForEmptyUri(R.drawable.ic_empty)
@@ -51,6 +80,7 @@ public class AdapterViewPager extends PagerAdapter {
 				.resetViewBeforeLoading(true).cacheOnDisc(true)
 				.imageScaleType(ImageScaleType.EXACTLY_STRETCHED)
 				.bitmapConfig(Bitmap.Config.RGB_565).considerExifParams(true)
+				.cacheInMemory(false).cacheOnDisc(true)
 				.displayer(new FadeInBitmapDisplayer(300)).build();
 	}
 
@@ -84,18 +114,32 @@ public class AdapterViewPager extends PagerAdapter {
 		View v = inflater.inflate(R.layout.item_adapter, null);
 
 		TextView tvTitle = (TextView) v.findViewById(R.id.tvTitle);
-		ImageView imgImage = (ImageView) v.findViewById(R.id.imvImage);
+		/* ImageView imgImage = (ImageView) v.findViewById(R.id.imvImage); */
+		PhotoView imgImage = (PhotoView) v
+				.findViewById(R.id.imvImage);
+		//imgImage.setFitsSystemWindows(true);
 		final ProgressBar pro = (ProgressBar) v.findViewById(R.id.loading);
+		final ScrollView scroll = (ScrollView) v.findViewById(R.id.scroll);
+
+		/**
+		 * nếu ảnh gif thì dùng ion load k thì vẫn dùng cái univer kia load
+		 */
 
 		if (item.getUrl().lastIndexOf("gif") > 0) {
-			tvTitle.setText(item.getTitle()+" (GIF)");
+			tvTitle.setText(item.getTitle() + " (GIF)");
+
+			imgImage.setMinimumWidth(display.getWidth());
+			imgImage.setMinimumHeight(display.getWidth());
+
 			Ion.with(mContext).load(item.getUrl()).withBitmap()
-					.resize(display.getWidth(), display.getWidth()).centerInside().intoImageView(imgImage);
+					.resize(256, 256).centerInside().intoImageView(imgImage);
 
 			pro.setVisibility(View.GONE);
-			
+
 		} else {
 			tvTitle.setText(item.getTitle());
+			// imgImage.setMinimumWidth(display.getWidth());
+			// imgImage.setMinimumHeight(display.getWidth());
 			loader.displayImage(item.getUrl(), imgImage, option,
 					new ImageLoadingListener() {
 
@@ -116,7 +160,21 @@ public class AdapterViewPager extends PagerAdapter {
 						@Override
 						public void onLoadingComplete(String imageUri,
 								View view, Bitmap loadedImage) {
-							pro.setVisibility(View.GONE);
+
+							if (loadedImage != null) {
+								pro.setVisibility(View.GONE);
+								int widthImage = loadedImage.getWidth();
+								int heightImage = loadedImage.getHeight();
+								if (1.3 * widthImage > heightImage) {
+									scroll.post(new Runnable() {
+										@Override
+										public void run() {
+											scroll.fullScroll(ScrollView.FOCUS_DOWN);
+
+										}
+									});
+								}
+							}
 
 						}
 
@@ -132,6 +190,12 @@ public class AdapterViewPager extends PagerAdapter {
 
 		container.addView(v, 0);
 		return v;
+	}
+
+	@Override
+	public void destroyItem(View container, int position, Object object) {
+		// TODO Auto-generated method stub
+		super.destroyItem(container, position, object);
 	}
 
 }
